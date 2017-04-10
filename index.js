@@ -23,5 +23,6 @@ setInterval(() => {
         // parse temp as int, divide by 1000 to get centigrade
         .map(t => parseInt(t[1]) / 1000);
 
-    console.dir(crap);
+    // push the avg of sensor data to firebase
+    ref.push().set({t: Date.now(), v: crap.reduce((a, b) => b + a, 0) / crap.length});
 }, 1000);
