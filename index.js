@@ -21,7 +21,7 @@ setInterval(() => {
         // filter out nulls
         .filter(e => e)
         // parse temp as int, divide by 1000 to get centigrade
-        .map(t => parseInt(t) / 1000);
+        .map(t => parseInt(t[1]) / 1000);
 
     console.dir(crap);
 }, 1000);
