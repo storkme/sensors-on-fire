@@ -25,4 +25,4 @@ setInterval(() => {
 
     // push the avg of sensor data to firebase
     ref.push().set({t: Date.now(), v: crap.reduce((a, b) => b + a, 0) / crap.length});
-}, 1000);
+}, 10000);
