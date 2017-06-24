@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "bleno": "^0.4.2",
     "firebase-admin": "^4.2.0"
   }
 }
