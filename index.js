@@ -3,6 +3,8 @@ const admin = require('firebase-admin');
 const btCallback = require('./bluetooth');
 const serviceAccount = require('./serviceAccountKey.json');
 
+const FLAG_CONNECTED = 2 ** 24;
+
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
   databaseURL: 'https://isithotinhereorisitjustm-91e09.firebaseio.com/'
@@ -10,6 +12,18 @@ admin.initializeApp({
 
 let db = admin.database();
 let ref = db.ref('temps');
+let connected;
+
+let connectedRef = db.ref('.info/connected');
+connectedRef.on('value', function (snap) {
+  if (snap.val() === true) {
+    console.log('[firebase] connected');
+    connected = true;
+  } else {
+    console.log('[firebase] disconnected');
+    connected = false;
+  }
+});
 
 setInterval(() => {
   const values = fs.readdirSync('/sys/bus/w1/devices/')
@@ -26,15 +40,11 @@ setInterval(() => {
 
   const value = values.reduce((a, b) => b + a, 0) / values.length;
 
-  // push the avg of sensor data to firebase
-  ref.push().set({ t: Date.now(), v: value })
-    .then(() => {
-      console.log('pushed value: ' + value);
-      btCallback(valueToBuffer(Math.floor(value * 1000)));
-    })
-    .catch((err) => {
-      console.error('failed to push value: ' + value, err);
-    });
+  ref.push().set({ t: Date.now(), v: value });
+
+  const broadcastValue = Math.floor(value * 1000) | (connected ? FLAG_CONNECTED : 0);
+
+  btCallback(valueToBuffer(broadcastValue));
 }, 30000);
 
 function valueToBuffer(val) {
