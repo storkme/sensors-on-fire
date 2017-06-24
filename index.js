@@ -35,7 +35,7 @@ setInterval(() => {
     .catch((err) => {
       console.error('failed to push value: ' + value, err);
     });
-}, 10000);
+}, 30000);
 
 function valueToBuffer(val) {
   let buf = Buffer.alloc(4);
