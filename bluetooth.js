@@ -24,13 +24,13 @@ bleno.on('advertisingStart', function (error) {
           properties: ['notify'],
           value: null,
           onSubscribe: function (maxValueSize, updateValueCallback) {
-            console.log('EchoCharacteristic - onSubscribe', maxValueSize);
+            console.log('[bt] onSubscribe', maxValueSize);
 
             callback = updateValueCallback;
           },
 
           onUnsubscribe: function () {
-            console.log('EchoCharacteristic - onUnsubscribe');
+            console.log('[bt] onUnsubscribe');
 
             callback = null;
           }
