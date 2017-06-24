@@ -3,7 +3,7 @@ const admin = require('firebase-admin');
 const btCallback = require('./bluetooth');
 const serviceAccount = require('./serviceAccountKey.json');
 
-const FLAG_CONNECTED = 2 ** 24;
+const FLAG_CONNECTED = 2 << 31;
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
