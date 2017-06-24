@@ -30,7 +30,7 @@ setInterval(() => {
   ref.push().set({ t: Date.now(), v: value })
     .then(() => {
       console.log('pushed value: ' + value);
-      btCallback(valueToBuffer(value));
+      btCallback(valueToBuffer(Math.floor(value * 1000)));
     })
     .catch((err) => {
       console.error('failed to push value: ' + value, err);
