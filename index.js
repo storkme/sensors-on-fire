@@ -1,26 +1,30 @@
 const fs = require('fs');
 const admin = require('firebase-admin');
 const btCallback = require('./bluetooth');
+const needle = require('needle');
 const serviceAccount = require('./serviceAccountKey.json');
 
-const FLAG_CONNECTED = 2 << 31;
+const FLAG_DISCONNECTED = 2 << 16;
+const databaseURL = 'https://isithotinhereorisitjustm-91e09.firebaseio.com/';
 
 admin.initializeApp({
+  databaseURL,
   credential: admin.credential.cert(serviceAccount),
-  databaseURL: 'https://isithotinhereorisitjustm-91e09.firebaseio.com/'
 });
 
 let db = admin.database();
 let ref = db.ref('temps');
 let connected;
-
-let connectedRef = db.ref('.info/connected');
-connectedRef.on('value', function (snap) {
+// Provide custom logger which prefixes log statements with "[FIREBASE]"
+// admin.database.enableLogging(function(message) {
+// console.log("[FIREBASE]", message);
+// });
+db.ref('.info/connected').on('value', (snap) => {
   if (snap.val() === true) {
-    console.log('[firebase] connected');
+    console.log('(' + new Date().toISOString() + ') [firebase] connected');
     connected = true;
   } else {
-    console.log('[firebase] disconnected');
+    console.log('(' + new Date().toISOString() + ') [firebase] disconnected');
     connected = false;
   }
 });
@@ -40,15 +44,30 @@ setInterval(() => {
 
   const value = values.reduce((a, b) => b + a, 0) / values.length;
 
-  ref.push().set({ t: Date.now(), v: value });
+  // this is the ugliest shit ever - since firebase has no fucking clue whether or not its socket connection is open
+  // as a workaround we make a head request to the database url, if we get a response we assume we still have
+  // a connection.
+  // fuck firebasse.
+  needle.head(databaseURL, { open_timeout: 5000 }, (err, response) => {
+    const connected = !err;
+    const t = Math.floor(Date.now() / 1000) * 1000;
+    console.log('t='+t+', value=' + value + ', connected=' + connected);
+    if (connected) {
+      const pushRef = ref.push();
+      pushRef.onDisconnect().remove();
+      pushRef.set({ t, v: value });
+    }
 
-  const broadcastValue = Math.floor(value * 1000) | (connected ? FLAG_CONNECTED : 0);
+    const broadcastValue = Math.floor(value * 1000) | (!connected ? FLAG_DISCONNECTED : 0);
 
-  btCallback(valueToBuffer(broadcastValue));
-}, 30000);
+    btCallback(valueToBuffer(broadcastValue, t));
+  });
+}, 20000);
 
-function valueToBuffer(val) {
-  let buf = Buffer.alloc(4);
+function valueToBuffer(val, time) {
+  let buf = Buffer.alloc(8);
   buf.writeUInt32LE(val, 0);
+  // add timestamp to the nearest second
+  buf.writeUInt32LE(Math.floor(time / 1000), 4);
   return buf;
 }

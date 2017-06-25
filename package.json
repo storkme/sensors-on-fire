@@ -10,6 +10,7 @@
   "license": "ISC",
   "dependencies": {
     "bleno": "^0.4.2",
-    "firebase-admin": "^4.2.0"
+    "firebase-admin": "^4.2.0",
+    "needle": "^1.6.0"
   }
 }

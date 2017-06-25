@@ -45,6 +45,5 @@ module.exports = (buf) => {
   if (!callback) {
     return false;
   }
-
   callback(buf);
 };
